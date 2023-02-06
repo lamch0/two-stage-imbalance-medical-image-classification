@@ -25,6 +25,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--csv_train', type=str, default='data/train_eyepacs.csv', help='path to training data csv')
 parser.add_argument('--data_path', type=str, default='data/eyepacs_all_ims/', help='path data')
+parser.add_argument('--weighting', type=str, default=' ', help='weighting mode (CDT, BSCE)')
 parser.add_argument('--sampling', type=str, default='instance', help='sampling mode (instance, class, sqrt, prog)')
 parser.add_argument('--model_name', type=str, default='bit_resnext50_1', help='architecture')
 parser.add_argument('--n_classes', type=int, default=5, help='binary disease detection (1) or multi-class (5)')
@@ -92,7 +93,7 @@ def mixup(input: torch.Tensor,
 #                              ) -> torch.Tensor:
 #     return -(input.log_softmax(dim=-1) * target).sum(dim=-1).mean()
 
-def run_one_epoch(loader, model, criterion, do_mixup=0., optimizer=None, assess=False):
+def run_one_epoch(loader, model, criterion, do_mixup=0., optimizer=None, assess=False, weighting=' '):
 
     device='cuda' if next(model.parameters()).is_cuda else 'cpu'
     train = optimizer is not None  # if we are in training mode there will be an optimizer and train=True here
@@ -106,28 +107,32 @@ def run_one_epoch(loader, model, criterion, do_mixup=0., optimizer=None, assess=
         n_elems, running_loss = 0, 0
         for i_batch, (inputs, labels, _) in enumerate(loader):
             inputs, labels = inputs.to(device), labels.squeeze().to(device)
+            logits = model(inputs)
+            exs_train = [] 
+            for c in range(len(np.unique(loader.dataset.dr))):
+                exs_train.append(np.count_nonzero(loader.dataset.dr==c))
+                spc = torch.Tensor(exs_train).type_as(logits)
             if do_mixup>0:
                 sys.exit('Need to fix mixup to work with cross-entropy')
                 inputs, mixed_labels = mixup(inputs, labels, np.random.beta(a=do_mixup, b=do_mixup))
                 if loader.dataset.n_classes == 1: mixed_labels = mixed_labels[:,1]
 
-                logits = model(inputs)
                 loss = criterion(logits.squeeze(), mixed_labels)
+            elif weighting == 'BSCE':
+               	# print(loader.dataset.dr.size)
+               #  print("Input size: ", inputs.size())
+                spc = spc.unsqueeze(0).expand(logits.shape[0],-1)
+                loss = criterion(logits+spc.log(), labels)
+                #loss = criterion(logits, labels)
+            elif weighting == 'CDT':
+                spc = torch.sqrt(spc)
+                loss = criterion(logits/spc, labels)
             else:
-                logits = model(inputs)
                 loss = criterion(logits, labels)
 
             if train:  # only in training mode
                 loss.backward()
-                if isinstance(optimizer, SAM):
-                    optimizer.first_step(zero_grad=True)
-                    logits = model(inputs)
-                    loss = criterion(logits, labels)
-                    loss.backward()  # for grad_acc_steps=0, this is just loss
-                    optimizer.second_step(zero_grad=True)
-                else:
-                    optimizer.step()
-
+                optimizer.step()
                 optimizer.zero_grad()
 
             if assess:
@@ -166,11 +171,11 @@ def train_model(model, sampling, optimizer, train_criterion, val_criterion, do_m
         # Modify sampling
         mod_loader = modify_loader(train_loader, sampling, epoch, n_epochs)
         # train one epoch
-        tr_preds, tr_probs, tr_labels, tr_loss = run_one_epoch(mod_loader, model, train_criterion, do_mixup, optimizer, assess=True)
+        tr_preds, tr_probs, tr_labels, tr_loss = run_one_epoch(mod_loader, model, train_criterion, do_mixup, optimizer, assess=True, weighting=weighting)
 
         with torch.no_grad():
             # tr_preds, tr_probs, tr_labels, tr_loss = run_one_epoch(train_loader, model, val_criterion, assess=True)
-            vl_preds, vl_probs, vl_labels, vl_loss = run_one_epoch(val_loader, model, val_criterion, assess=True)
+            vl_preds, vl_probs, vl_labels, vl_loss = run_one_epoch(val_loader, model, val_criterion, assess=True, weighting=weighting)
 
 
         if exp_path is not None:
@@ -274,6 +279,7 @@ if __name__ == '__main__':
     n_classes = args.n_classes
 
     # gather parser parameters
+    weighting = args.weighting
     sampling = args.sampling
     model_name = args.model_name
     optimizer_choice = args.optimizer

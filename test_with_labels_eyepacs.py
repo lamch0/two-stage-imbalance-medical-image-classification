@@ -16,7 +16,6 @@ import torch.nn.functional as F
 import os.path as osp
 import os
 import sys
-from utils.gmean import geometric_mean_score
 
 from sklearn.metrics import confusion_matrix
 

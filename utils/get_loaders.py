@@ -70,7 +70,10 @@ class ClassDataset(Dataset):
     def __getitem__(self, index):
         # load image and labels
         if self.data_path is not None:
-            img = Image.open(osp.join(self.data_path, self.im_list[index]))
+            try:
+               img = Image.open(osp.join(self.data_path, self.im_list[index])+'.jpg')
+            except:
+                img = Image.open(osp.join(self.data_path, self.im_list[index]))
         else:
             img = Image.open(self.im_list[index])
 
