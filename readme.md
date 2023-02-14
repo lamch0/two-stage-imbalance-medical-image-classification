@@ -20,6 +20,7 @@ Apart from balanced-mixup and re-sampling methods that introducded by this [pape
 | :---:   |
 | Balanced Softmax Cross Entropy|
 | Class Dependent Temperature |
+
 We chose these two re-weighting methods based on the results on CIFAR-10 and CIFAR-100 datasets with imbalance factors comopared with other re-weighting methods.
 
 ### Two-stage classifers
