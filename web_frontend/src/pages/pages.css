@@ -1,0 +1,55 @@
+.page-title {
+  font-size: 32px;
+}
+
+.flex-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  margin-top: 18px;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  height: 50px;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 300px;
+  margin-top: 128px;
+}
+
+.title {
+  margin: 45px;
+  font-size: 32px;
+}
+a:link {
+  text-decoration: none;
+}
+
+a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+a:active {
+  text-decoration: none;
+}
+.button {
+  color: white;
+  width: 300px;
+  margin: 12px;
+}
