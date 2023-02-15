@@ -18,3 +18,4 @@ manuscript/
 *.pth
 *.npz
 log/
+uploads/*

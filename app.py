@@ -100,6 +100,19 @@ async def upload(file: UploadFile = File(...)):
     return {"Success:": file}
     # return StreamingResponse(new_image, media_type="image/png")
 
+
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)):
+    contents = await file.read()
+    with open(f"uploads/{file.filename}", "wb") as f:
+        f.write(contents)
+    return {"filename": file.filename}
+
+@app.get("/uploads/{filename}")
+async def get_uploaded_file(filename: str):
+    return FileResponse(f"uploads/{filename}")
+
+
 @app.get('/')
 def home():
     return {"message:":"Hello World!"}
