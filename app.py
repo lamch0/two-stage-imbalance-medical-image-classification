@@ -13,6 +13,7 @@ import aiofiles
 from io import BytesIO
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
@@ -88,8 +89,6 @@ async def predict(file: UploadFile = File(...)):
 
 @app.post('/upload')
 async def upload(file: UploadFile = File(...)):
-    
-
     extension = file.filename.split(".")[-1] in ("jpg", "jpeg", "png")
     if not extension:
         return "Image must be jpg or png format!"
@@ -100,6 +99,16 @@ async def upload(file: UploadFile = File(...)):
     return {"Success:": file}
     # return StreamingResponse(new_image, media_type="image/png")
 
+@app.get('/test_predict')
+async def test_prdeict():
+    data = {
+        "Dr1": 0.2,
+        "Dr2": 0.1,
+        "Dr3": 0.1,
+        "Dr4": 0.5,
+        "Dr5": 0.1,
+    }
+    return JSONResponse(content=data)
 
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):

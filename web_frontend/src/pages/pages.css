@@ -8,7 +8,12 @@
   justify-content: center;
   align-items: center;
 }
-
+.flex-container-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
 .page-container {
   display: flex;
   flex-direction: column;
@@ -52,4 +57,14 @@ a:active {
   color: white;
   width: 300px;
   margin: 12px;
+}
+.image-container {
+  width: 300px;
+  height: 300px;
+  margin: 36px 10px;
+}
+.pie-chart-container {
+  width: 300px;
+  height: 300px;
+  margin: 36px 10px;
 }
