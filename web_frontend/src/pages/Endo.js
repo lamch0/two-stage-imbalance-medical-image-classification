@@ -94,12 +94,8 @@ export default function Endo() {
         <div className="title">classify Hyper-Kvasir</div>
         {imageUrl && (
           <div className="flex-container-row">
-            <div>
-              <img
-                className="image-container"
-                src={imageUrl}
-                alt="uploaded image"
-              />
+            <div className="image-container">
+              <img src={imageUrl} alt="uploaded image" />
             </div>
             <div className="pie-chart-container">
               <PieChart chartData={data} />

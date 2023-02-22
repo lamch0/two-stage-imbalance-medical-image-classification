@@ -59,9 +59,15 @@ a:active {
   margin: 12px;
 }
 .image-container {
-  width: 300px;
-  height: 300px;
+  max-width: 300px;
   margin: 36px 10px;
+}
+.image-container img {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: cover;
+  object-position: center;
 }
 .pie-chart-container {
   width: 300px;
