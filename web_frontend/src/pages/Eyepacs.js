@@ -7,6 +7,7 @@ import { Data } from "../Data";
 export default function Eyepacs() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
+  const [predictedClass, setPredictedClass] = useState("");
 
   const changeHandler = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -20,52 +21,42 @@ export default function Eyepacs() {
     formData.append("file", selectedFile, selectedFile.name);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/upload", {
+      const response = await fetch("http://127.0.0.1:8000/predict", {
         method: "POST",
         body: formData,
       });
+      // console.log(response.json());
+      const responseJson = await response.json();
+      const filename = responseJson.filename;
+      setPredictedClass(responseJson.predicted_class);
+      const slicedArray = Object.entries(responseJson).slice(0, 5);
+      setData({
+        labels: Object.keys(responseJson)
+          .slice(0, 5)
+          .map((columnName) => columnName),
+        datasets: [
+          {
+            label: " ",
+            data: Object.keys(responseJson)
+              .slice(0, 5)
+              .map((columnName) => responseJson[columnName]),
+            backgroundColor: [
+              "#34568B",
+              "#FF6F61",
+              "#6B5B95",
+              "#88B04B",
+              "#92A8D1",
+            ],
+          },
+        ],
+      });
 
-      const { filename } = await response.json();
       const imageUrl = `http://127.0.0.1:8000/uploads/${filename}`;
       setSelectedFile(null); // clear file input
       setImageUrl(imageUrl); // set the imageUrl state to display the uploaded image
     } catch (error) {
       console.error("Error uploading image", error);
     }
-    // const requestOptions = {
-    //   method: "POST",
-    //   //headers: { 'Content-Type': 'multipart/form-data' }, // DO NOT INCLUDE HEADERS
-    //   body: formData,
-    // };
-    // fetch("http://127.0.0.1:8000/upload", requestOptions)
-    //   .then((response) => response.json())
-    //   .then(function (response) {
-    //     console.log("response");
-    //     console.log(response);
-    //   });
-    fetch("http://127.0.0.1:8000/test_predict")
-      .then((predictResponse) => predictResponse.json())
-      .then((resultData) =>
-        setData({
-          labels: Object.keys(resultData).map((columnName) => columnName),
-          datasets: [
-            {
-              label: "The Probability of the sample belongs to this class",
-              data: Object.keys(resultData).map(
-                (columnName) => resultData[columnName]
-              ),
-              backgroundColor: [
-                "#34568B",
-                "#FF6F61",
-                "#6B5B95",
-                "#88B04B",
-                "#92A8D1",
-              ],
-            },
-          ],
-        })
-      )
-      .catch((error) => console.log(error));
   };
 
   // For data
@@ -93,14 +84,19 @@ export default function Eyepacs() {
       <div className="page-container">
         <div className="title">classify Eyepacs</div>
         {imageUrl && (
-          <div className="flex-container-row">
-            <div className="image-container">
-              <img src={imageUrl} alt="uploaded image" />
+          <>
+            <div className="flex-container-row">
+              <div className="image-container">
+                <img src={imageUrl} alt="uploaded image" />
+              </div>
+              <div className="pie-chart-container">
+                <PieChart chartData={data} />
+              </div>
             </div>
-            <div className="pie-chart-container">
-              <PieChart chartData={data} />
+            <div className="result-text">
+              The model suggest this image is belongs to DR{predictedClass}
             </div>
-          </div>
+          </>
         )}
 
         <form onSubmit={handleSubmit} className="flex-container">

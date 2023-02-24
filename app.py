@@ -1,11 +1,12 @@
 import io
 import json
 from PIL import Image
-# from torchvision import models
-# import torchvision.transforms as transforms
-# import torch
-# from models.get_model import get_arch
-# from utils.model_saving_loading import load_model
+from torchvision import models
+import torchvision.transforms as transforms
+import torch
+from models.get_model import get_arch
+from utils.model_saving_loading import load_model
+from torchvision.models import mobilenet_v2
 from fastapi import FastAPI, File, UploadFile
 import uvicorn
 from fastapi.responses import FileResponse
@@ -14,6 +15,7 @@ from io import BytesIO
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import numpy as np
 
 app = FastAPI()
 
@@ -27,88 +29,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# imagenet_class_index = json.load(open('imagenet_class_index.json'))
-# model = models.densenet121(pretrained=True)
-
-
-model_name = "mobilenetV2"
-load_path = ""
-# model, mean, std = get_arch(model_name, n_classes=23)
-# model, stats = load_model(model, load_path, device='cpu')
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# model = model.to(device)
-# model.eval()
-
-# 图片文件读取，输出Image.Image格式
-def read_imagefile(file) -> Image.Image:
-    image = Image.open(io.BytesIO(file))
-    return image
-
-# 图片预处理，torchvision.transforms转换Image格式为torch tensor
-# def transform_image(image_bytes: Image.Image):
-#     my_transforms = transforms.Compose([transforms.Resize(255),
-#                                         transforms.CenterCrop(224),
-#                                         transforms.ToTensor(),
-#                                         transforms.Normalize(
-#                                             [0.485, 0.456, 0.406],
-#                                             [0.229, 0.224, 0.225])])
-#     return my_transforms(image_bytes).unsqueeze(0)
-
-# # 定义预测函数，图片预处理->模型预测->预测结果转换
-# def get_prediction(image_bytes: Image.Image):
-#     tensor = transform_image(image_bytes=image_bytes)
-#     outputs = model.forward(tensor)
-#     _, y_hat = outputs.max(1)
-#     predicted_idx = str(y_hat.item())
-#     return imagenet_class_index[predicted_idx]
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+checkpoint = torch.load("model_checkpoint.pth", map_location=device)
+transform = transforms.Compose([
+    transforms.Resize((512, 512)),
+    transforms.ToTensor()
+])
+model = mobilenet_v2(pretrained=True)
+num_ftrs = model.classifier[1].in_features
+model.classifier = torch.nn.Linear(num_ftrs, 5)
+model.load_state_dict(checkpoint['model_state_dict'])
 
 @app.post('/predict')
 async def predict(file: UploadFile = File(...)):
-    '''
-    Parameters
-    ----------
-    file : UploadFile, optional
-        DESCRIPTION. The default is an image file.
-
-    Returns
-    -------
-    json : Response with list of dicts.
-        Each dict contains class_id, class_name
-
-    '''
-    extension = file.filename.split(".")[-1] in ("jpg", "jpeg", "png")
-    if not extension:
-        return "Image must be jpg or png format!"
-
-
-    img_bytes = read_imagefile(await file.read())
-    # class_id, class_name = get_prediction(image_bytes=img_bytes)
-    # return {'class_id': class_id, 'class_name': class_name}
-    return {"message:": file}
-
-@app.post('/upload')
-async def upload(file: UploadFile = File(...)):
-    extension = file.filename.split(".")[-1] in ("jpg", "jpeg", "png")
-    if not extension:
-        return "Image must be jpg or png format!"
-    original_image = Image.open(file.file)
-    new_image = BytesIO()
-    original_image.save(new_image, "PNG")
-    new_image.seek(0)
-    return {"Success:": file}
-    # return StreamingResponse(new_image, media_type="image/png")
-
-@app.get('/test_predict')
-async def test_prdeict():
-    data = {
-        "Dr1": 0.2,
-        "Dr2": 0.1,
-        "Dr3": 0.1,
-        "Dr4": 0.5,
-        "Dr5": 0.1,
-    }
-    return JSONResponse(content=data)
+    contents = await file.read()
+    with open(f"uploads/{file.filename}", "wb") as f:
+        f.write(contents)
+    input_image = Image.open(file.file)
+    input_tensor = transform(input_image).unsqueeze(0)
+    # Make predictions
+    model.eval()
+    probs_all = []
+    keys = ["DR0", "DR1", "DR2", "DR3", "DR4"]
+    with torch.no_grad():
+        output = model(input_tensor)
+        probs = torch.nn.Softmax(dim=1)(output)
+        probs_arr = probs.detach().cpu().numpy()
+        probs_arr.flatten()
+        probs_list = probs_arr.tolist()[0]
+        data_dict = dict(zip(keys, probs_list))
+        probs_all.extend(probs.detach().cpu().numpy())
+    predicted_class = torch.argmax(output).item()
+    data_dict["filename"] = file.filename
+    data_dict["predicted_class"] = predicted_class
+    print(data_dict)
+    # Return the predicted class as JSON
+    return JSONResponse(content=data_dict)
 
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):

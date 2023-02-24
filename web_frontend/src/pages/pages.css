@@ -74,3 +74,7 @@ a:active {
   height: 300px;
   margin: 36px 10px;
 }
+.result-text {
+  font-size: 20px;
+  margin: 18px 0px 36px 0px;
+}
