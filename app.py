@@ -30,7 +30,7 @@ app.add_middleware(
 )
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-checkpoint = torch.load("model_checkpoint.pth", map_location=device)
+checkpoint = torch.load("model_checkpoint/2tsage_prog/model_checkpoint.pth", map_location=device)
 transform = transforms.Compose([
     transforms.Resize((512, 512)),
     transforms.ToTensor()
@@ -40,7 +40,7 @@ num_ftrs = model.classifier[1].in_features
 model.classifier = torch.nn.Linear(num_ftrs, 5)
 model.load_state_dict(checkpoint['model_state_dict'])
 
-@app.post('/predict')
+@app.post('/predict/eyepacs')
 async def predict(file: UploadFile = File(...)):
     contents = await file.read()
     with open(f"uploads/{file.filename}", "wb") as f:

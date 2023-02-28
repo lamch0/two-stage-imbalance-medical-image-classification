@@ -19,3 +19,4 @@ manuscript/
 *.npz
 log/
 uploads/*
+model_checkpoint/
