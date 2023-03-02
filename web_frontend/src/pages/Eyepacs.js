@@ -60,7 +60,6 @@ export default function Eyepacs() {
   };
 
   // For data
-  // console.log(predictResult);
   const columnNames = Object.keys(Data);
   const [data, setData] = useState({
     labels: columnNames.map((columnName) => columnName),
@@ -100,12 +99,13 @@ export default function Eyepacs() {
         )}
 
         <form onSubmit={handleSubmit} className="flex-container">
+          <div className="remind-text">Only accept .jpeg or .jpg</div>
           <div class="mb-3">
             <input
               name="image"
               type="file"
               onChange={changeHandler}
-              accept=".jpeg, .png, .jpg"
+              accept=".jpeg, .jpg"
               title=" "
               className="image-upload-container"
               id="formFile"

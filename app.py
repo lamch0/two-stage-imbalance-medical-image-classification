@@ -30,15 +30,11 @@ app.add_middleware(
 )
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-checkpoint = torch.load("model_checkpoint/2tsage_prog/model_checkpoint.pth", map_location=device)
 transform = transforms.Compose([
     transforms.Resize((512, 512)),
     transforms.ToTensor()
 ])
-model = mobilenet_v2(pretrained=True)
-num_ftrs = model.classifier[1].in_features
-model.classifier = torch.nn.Linear(num_ftrs, 5)
-model.load_state_dict(checkpoint['model_state_dict'])
+
 
 @app.post('/predict/eyepacs')
 async def predict(file: UploadFile = File(...)):
@@ -47,6 +43,14 @@ async def predict(file: UploadFile = File(...)):
         f.write(contents)
     input_image = Image.open(file.file)
     input_tensor = transform(input_image).unsqueeze(0)
+
+    # load checkpoint and model
+    checkpoint = torch.load("model_checkpoint/eyepacs/2tsage_prog/model_checkpoint.pth", map_location=device)
+    model = mobilenet_v2(pretrained=True)
+    num_ftrs = model.classifier[1].in_features
+    model.classifier = torch.nn.Linear(num_ftrs, 5)
+    model.load_state_dict(checkpoint['model_state_dict'])
+
     # Make predictions
     model.eval()
     probs_all = []
@@ -66,12 +70,40 @@ async def predict(file: UploadFile = File(...)):
     # Return the predicted class as JSON
     return JSONResponse(content=data_dict)
 
-@app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...)):
+@app.post('/predict/endo')
+async def predict(file: UploadFile = File(...)):
     contents = await file.read()
     with open(f"uploads/{file.filename}", "wb") as f:
         f.write(contents)
-    return {"filename": file.filename}
+    input_image = Image.open(file.file)
+    input_tensor = transform(input_image).unsqueeze(0)
+
+    # load checkpoint and model
+    checkpoint = torch.load("model_checkpoint/endo/2stage_prog/model_checkpoint.pth", map_location=device)
+    model = mobilenet_v2(pretrained=True)
+    num_ftrs = model.classifier[1].in_features
+    model.classifier = torch.nn.Linear(num_ftrs, 23)
+    model.load_state_dict(checkpoint['model_state_dict'])
+
+    # Make predictions
+    model.eval()
+    probs_all = []
+    keys = ['esophagitis', 'normal z-line', 'polyps', 'ulcerative colitis', 'reflux esophagitis', 'hemorrhoids', 'diverticulosis', 'esophageal varices', 'pyloric stenosis', 'z-line irregular', 'duodenal ulcer', 'celiac disease', 'normal-cecum', 'ulcerative colitis-cecum', 'angiodysplasia', 'normal-pylorus', 'portal hypertensive gastropathy', 'dieulafoy lesion', 'normal-2nd portion of duodenum', 'varices', 'abnormal-pylorus', 'abnormal-2nd portion of duodenum', 'ulcerative colitis-rectum']
+
+    with torch.no_grad():
+        output = model(input_tensor)
+        probs = torch.nn.Softmax(dim=1)(output)
+        probs_arr = probs.detach().cpu().numpy()
+        probs_arr.flatten()
+        probs_list = probs_arr.tolist()[0]
+        data_dict = dict(zip(keys, probs_list))
+        probs_all.extend(probs.detach().cpu().numpy())
+    predicted_class = torch.argmax(output).item()
+    data_dict["filename"] = file.filename
+    data_dict["predicted_class"] = keys[predicted_class]
+    print(data_dict)
+    # Return the predicted class as JSON
+    return JSONResponse(content=data_dict)
 
 @app.get("/uploads/{filename}")
 async def get_uploaded_file(filename: str):
