@@ -10,7 +10,21 @@
     format("truetype");
 }
 body {
-  margin: 0;
-  background: #272a2d;
-  color: aliceblue;
+  margin: 0 !important;
+  background: #272a2d !important;
+  color: aliceblue !important;
+}
+.card {
+  background-color: #272a2d;
+}
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+a:hover {
+  text-decoration: none;
+  color: inherit;
 }

@@ -2,13 +2,14 @@ import React from "react";
 import { useState } from "react";
 import "./pages.css";
 import PieChart from "../components/PieChart";
-import { Data } from "../Data";
 
 export default function Endo() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [predictedClass, setPredictedClass] = useState("");
-
+  const Data = {
+    test: 0,
+  };
   const changeHandler = (event) => {
     setSelectedFile(event.target.files[0]);
     console.log(event.target.files[0]);

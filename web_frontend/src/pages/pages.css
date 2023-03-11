@@ -81,3 +81,8 @@ a:active {
 .remind-text {
   margin: 10px 0px;
 }
+.card-body {
+  background-color: #272a2d;
+  border-radius: 6px;
+  border-color: black;
+}
