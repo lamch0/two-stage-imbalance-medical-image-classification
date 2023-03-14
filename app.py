@@ -99,11 +99,12 @@ async def predict(file: UploadFile = File(...)):
         data_dict = dict(zip(keys, probs_list))
         probs_all.extend(probs.detach().cpu().numpy())
     predicted_class = torch.argmax(output).item()
-    data_dict["filename"] = file.filename
-    data_dict["predicted_class"] = keys[predicted_class]
-    print(data_dict)
+    sorted_dict = dict(sorted(data_dict.items(), key=lambda x: x[1], reverse=True))
+    top_five = dict(list(sorted_dict.items())[:5])
+    top_five["filename"] = file.filename
+    top_five["predicted_class"] = keys[predicted_class]
     # Return the predicted class as JSON
-    return JSONResponse(content=data_dict)
+    return JSONResponse(content=top_five)
 
 @app.get("/uploads/{filename}")
 async def get_uploaded_file(filename: str):

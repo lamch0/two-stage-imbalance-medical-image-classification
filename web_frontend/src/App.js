@@ -11,6 +11,7 @@ import LogIn from "./pages/LogIn.js";
 import { AuthProvider } from "./contexts/AuthContext.js";
 import Profile from "./pages/Profile.js";
 import PrivateRoute from "./components/PrivateRoute.js";
+import LoginRoute from "./components/LoginRoute.js";
 import ForgotPassword from "./pages/ForgotPassword.js";
 import UpdateProfile from "./pages/UpdateProfile.js";
 
@@ -18,14 +19,35 @@ function App() {
   return (
     <>
       <div className="App">
-        <Navbar />
-        <div className="container">
-          <AuthProvider>
+        <AuthProvider>
+          <Navbar />
+          <div className="container">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/login" element={<LogIn />} />
-              <Route path="/update-profile" element={<UpdateProfile />} />
+              <Route
+                path="/signup"
+                element={
+                  <LoginRoute>
+                    <SignUp />
+                  </LoginRoute>
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  <LoginRoute>
+                    <LogIn />
+                  </LoginRoute>
+                }
+              />
+              <Route
+                path="/update-profile"
+                element={
+                  <PrivateRoute>
+                    <UpdateProfile />
+                  </PrivateRoute>
+                }
+              />
               <Route
                 path="/profile"
                 element={
@@ -54,8 +76,8 @@ function App() {
                 }
               />
             </Routes>
-          </AuthProvider>
-        </div>
+          </div>
+        </AuthProvider>
       </div>
     </>
   );
