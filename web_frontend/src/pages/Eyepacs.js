@@ -2,6 +2,7 @@ import React from "react";
 import { useState } from "react";
 import "./pages.css";
 import PieChart from "../components/PieChart";
+import ResultImage from "../components/ResultImage";
 
 export default function Eyepacs() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -30,7 +31,7 @@ export default function Eyepacs() {
       const responseJson = await response.json();
       const filename = responseJson.filename;
       setPredictedClass(responseJson.predicted_class);
-      const slicedArray = Object.entries(responseJson).slice(0, 5);
+      // const slicedArray = Object.entries(responseJson).slice(0, 5);
       setData({
         labels: Object.keys(responseJson)
           .slice(0, 5)
@@ -86,9 +87,7 @@ export default function Eyepacs() {
         {imageUrl && (
           <>
             <div className="flex-container-row">
-              <div className="image-container">
-                <img src={imageUrl} alt="uploaded image" />
-              </div>
+              <ResultImage ImageURL={imageUrl} />
               <div className="pie-chart-container">
                 <PieChart chartData={data} />
               </div>

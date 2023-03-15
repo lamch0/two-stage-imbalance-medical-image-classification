@@ -66,7 +66,7 @@ async def predict(file: UploadFile = File(...)):
     predicted_class = torch.argmax(output).item()
     data_dict["filename"] = file.filename
     data_dict["predicted_class"] = predicted_class
-    print(data_dict)
+    # print(data_dict)
     # Return the predicted class as JSON
     return JSONResponse(content=data_dict)
 
