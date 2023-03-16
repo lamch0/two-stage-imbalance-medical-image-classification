@@ -86,3 +86,7 @@ a:active {
   border-radius: 6px;
   border-color: black;
 }
+.feedback-text {
+  font-size: small;
+  color: gray;
+}

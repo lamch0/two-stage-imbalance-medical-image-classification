@@ -10,9 +10,28 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState();
   const [loading, setLoading] = useState(true);
+  const [verify, setVerify] = useState(false);
 
   function signup(email, password) {
-    return auth.createUserWithEmailAndPassword(email, password);
+    auth
+      .createUserWithEmailAndPassword(email, password)
+      .then((userCredential) => {
+        // Send email verification email
+        userCredential.user
+          .sendEmailVerification()
+          .then(() => {
+            // Email verification email sent
+            return true;
+          })
+          .catch((error) => {
+            // Error sending email verification email
+            console.log(error);
+          });
+      })
+      .catch((error) => {
+        // Error creating user account
+        console.log(error);
+      });
   }
 
   function login(email, password) {
@@ -37,6 +56,13 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        if (user.emailVerified) {
+          setVerify(true);
+        } else {
+          setVerify(false);
+        }
+      }
       setCurrentUser(user);
       setLoading(false);
     });
@@ -46,6 +72,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     currentUser,
+    verify,
     login,
     signup,
     logout,

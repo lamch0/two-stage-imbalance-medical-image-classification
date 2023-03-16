@@ -12,6 +12,7 @@ import { AuthProvider } from "./contexts/AuthContext.js";
 import Profile from "./pages/Profile.js";
 import PrivateRoute from "./components/PrivateRoute.js";
 import LoginRoute from "./components/LoginRoute.js";
+import VerifyRoute from "./components/VerifyRoute.js";
 import ForgotPassword from "./pages/ForgotPassword.js";
 import UpdateProfile from "./pages/UpdateProfile.js";
 
@@ -62,17 +63,17 @@ function App() {
               <Route
                 path="/classifyEyepacs"
                 element={
-                  <PrivateRoute>
+                  <VerifyRoute>
                     <Eyepacs />
-                  </PrivateRoute>
+                  </VerifyRoute>
                 }
               />
               <Route
                 path="/classifyEndo"
                 element={
-                  <PrivateRoute>
+                  <VerifyRoute>
                     <Endo />
-                  </PrivateRoute>
+                  </VerifyRoute>
                 }
               />
             </Routes>
