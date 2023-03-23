@@ -1,5 +1,7 @@
 import io
 import json
+import os
+import platform
 from PIL import Image
 from torchvision import models
 import torchvision.transforms as transforms
@@ -16,6 +18,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import numpy as np
+import zipfile
 
 app = FastAPI()
 
@@ -75,8 +78,44 @@ async def predict(file: UploadFile = File(...)):
     contents = await file.read()
     with open(f"uploads/{file.filename}", "wb") as f:
         f.write(contents)
-    input_image = Image.open(file.file)
-    input_tensor = transform(input_image).unsqueeze(0)
+    
+    # Get the operating system name
+    os_name = platform.system()
+    # check if the uploaded file is a zip file
+    if zipfile.is_zipfile(f"uploads/{file.filename}"):
+        with zipfile.ZipFile(f"uploads/{file.filename}", 'r') as zip_ref:
+            # extract all the files in the zip file
+            zip_ref.extractall(f"uploads/{file.filename[:-4]}")
+        # loop through the extracted files in macos
+        input_tensors = []
+        filename_list = []
+        if (os_name == "Darwin"): 
+            for extracted_file in os.listdir(f"uploads/{file.filename[:-4]}/{file.filename[:-4]}"):
+                # open each extracted file
+                with open(f"uploads/{file.filename[:-4]}/{file.filename[:-4]}/{extracted_file}", "rb") as f:
+                    # process each file as required
+                    
+                    input_image = Image.open(f)
+                    input_tensor = transform(input_image).unsqueeze(0)
+                    input_tensors.append(input_tensor)
+                    filename_list.append(extracted_file)
+        # loop through the extracted files in other os
+        else:
+            for extracted_file in os.listdir(f"uploads/{file.filename[:-4]}"):
+                # open each extracted file
+                with open(f"uploads/{file.filename[:-4]}/{extracted_file}", "rb") as f:
+                    # process each file as required
+
+                    input_image = Image.open(f)
+                    input_tensor = transform(input_image).unsqueeze(0)
+                    input_tensors.append(input_tensor)
+                    filename_list.append(extracted_file)
+    else:
+        # if the uploaded file is not a zip file, process it as usual
+        input_image = Image.open(file.file)
+        input_tensor = transform(input_image).unsqueeze(0)
+        input_tensors = [input_tensor]
+        filename_list = [file.filename]
 
     # load checkpoint and model
     checkpoint = torch.load("model_checkpoint/endo/2stage_prog/model_checkpoint.pth", map_location=device)
@@ -89,25 +128,30 @@ async def predict(file: UploadFile = File(...)):
     model.eval()
     probs_all = []
     keys = ['esophagitis', 'normal z-line', 'polyps', 'ulcerative colitis', 'reflux esophagitis', 'hemorrhoids', 'diverticulosis', 'esophageal varices', 'pyloric stenosis', 'z-line irregular', 'duodenal ulcer', 'celiac disease', 'normal-cecum', 'ulcerative colitis-cecum', 'angiodysplasia', 'normal-pylorus', 'portal hypertensive gastropathy', 'dieulafoy lesion', 'normal-2nd portion of duodenum', 'varices', 'abnormal-pylorus', 'abnormal-2nd portion of duodenum', 'ulcerative colitis-rectum']
-
-    with torch.no_grad():
-        output = model(input_tensor)
-        probs = torch.nn.Softmax(dim=1)(output)
-        probs_arr = probs.detach().cpu().numpy()
-        probs_arr.flatten()
-        probs_list = probs_arr.tolist()[0]
-        data_dict = dict(zip(keys, probs_list))
-        probs_all.extend(probs.detach().cpu().numpy())
-    predicted_class = torch.argmax(output).item()
-    sorted_dict = dict(sorted(data_dict.items(), key=lambda x: x[1], reverse=True))
-    top_five = dict(list(sorted_dict.items())[:5])
-    top_five["filename"] = file.filename
-    top_five["predicted_class"] = keys[predicted_class]
+    list_of_data = []
+    
+    for i, tensor in enumerate(input_tensors):
+        with torch.no_grad():
+            output = model(tensor)
+            probs = torch.nn.Softmax(dim=1)(output)
+            probs_arr = probs.detach().cpu().numpy()
+            probs_arr.flatten()
+            probs_list = probs_arr.tolist()[0]
+            data_dict = dict(zip(keys, probs_list))
+            probs_all.extend(probs.detach().cpu().numpy())
+        predicted_class = torch.argmax(output).item()
+        sorted_dict = dict(sorted(data_dict.items(), key=lambda x: x[1], reverse=True))
+        # only get the top five result
+        top_five = dict(list(sorted_dict.items())[:5])
+        top_five["filename"] = filename_list[i]
+        top_five["predicted_class"] = keys[predicted_class]
+        list_of_data.append(top_five)
     # Return the predicted class as JSON
-    return JSONResponse(content=top_five)
+    return JSONResponse(content=list_of_data)
 
 @app.get("/uploads/{filename}")
 async def get_uploaded_file(filename: str):
+    print("called")
     return FileResponse(f"uploads/{filename}")
 
 

@@ -35,7 +35,7 @@
 }
 
 .title {
-  margin: 45px;
+  margin: 12px 0px 0px 0px;
   font-size: 32px;
 }
 a:link {
@@ -65,18 +65,18 @@ a:active {
 .image-container img {
   width: 100%;
   height: auto;
-  max-height: 300px;
+  max-height: 250px;
   object-fit: cover;
   object-position: center;
 }
 .pie-chart-container {
-  width: 300px;
+  width: 400px;
   height: 300px;
-  margin: 36px 10px;
+  margin: 0px 10px;
 }
 .result-text {
   font-size: 20px;
-  margin: 18px 0px 36px 0px;
+  margin: 18px 0px 0px 0px;
 }
 .remind-text {
   margin: 10px 0px;
