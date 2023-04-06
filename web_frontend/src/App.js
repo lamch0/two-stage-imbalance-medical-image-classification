@@ -15,6 +15,7 @@ import LoginRoute from "./components/LoginRoute.js";
 import VerifyRoute from "./components/VerifyRoute.js";
 import ForgotPassword from "./pages/ForgotPassword.js";
 import UpdateProfile from "./pages/UpdateProfile.js";
+import Docs from "./pages/Docs.js";
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/docs-api" element={<Docs />} />
               <Route
                 path="/classifyEyepacs"
                 element={

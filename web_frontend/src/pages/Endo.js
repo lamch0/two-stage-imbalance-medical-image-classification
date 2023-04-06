@@ -6,11 +6,11 @@ import ResultImage from "../components/ResultImage";
 
 export default function Endo() {
   const [selectedFile, setSelectedFile] = useState(null);
-  // const [responseData, setResponseData] = useState([]);
   const [imageUrl, setImageUrl] = useState([]);
   const [predictedClass, setPredictedClass] = useState([]);
   // For data
   const [data, setData] = useState([]);
+  // pie chart setting
   const options = {
     plugins: {
       legend: {
@@ -21,6 +21,7 @@ export default function Endo() {
   };
   const changeHandler = (event) => {
     setSelectedFile(event.target.files[0]);
+    // console.log(event.target.files[0]);
   };
 
   const handleSubmit = async (event) => {
@@ -39,9 +40,6 @@ export default function Endo() {
       responseJson.forEach((element) => {
         const filename = element.filename;
         const imageURL = `http://127.0.0.1:8000/uploads/${filename}`;
-        // urls.push(imageURL);
-        // classes.push(element.predicted_class);
-        setSelectedFile(null); // clear file input
         setImageUrl((prevImageUrl) => [...prevImageUrl, imageURL]); // set the imageUrl state to display the uploaded image
 
         setPredictedClass((prevClass) => [
@@ -49,7 +47,6 @@ export default function Endo() {
           element.predicted_class,
         ]);
 
-        // const slicedArray = Object.entries(responseJson).slice(0, 5);
         setData((prevData) => [
           ...prevData,
           {
@@ -78,7 +75,18 @@ export default function Endo() {
       console.error("Error uploading image", error);
     }
   };
-
+  const handleDownload = async () => {
+    const response = await fetch(
+      `http://127.0.0.1:8000/download-csv?filename=${selectedFile.name}`
+    );
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(new Blob([blob]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${selectedFile.name.slice(0, -4)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+  };
   return (
     <>
       <div className="page-container">
@@ -103,6 +111,9 @@ export default function Endo() {
                   </span>
                 </>
               ))}
+              <button class="btn btn-primary" onClick={handleDownload}>
+                Download the result
+              </button>
             </div>
           </>
         )}

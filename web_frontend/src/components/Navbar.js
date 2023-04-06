@@ -18,7 +18,10 @@ export default function Navbar() {
         <CustomLink to="/about">About</CustomLink>
         <CustomLink to="/contact">Contact</CustomLink>
         {currentUser ? (
-          <CustomLink to="/profile">My Profile</CustomLink>
+          <>
+            <CustomLink to="/docs-api">Docs</CustomLink>
+            <CustomLink to="/profile">My Profile</CustomLink>
+          </>
         ) : (
           <>
             <CustomLink to="/login">Log In</CustomLink>
