@@ -3,11 +3,15 @@ import { useState } from "react";
 import "./pages.css";
 import PieChart from "../components/PieChart";
 import ResultImage from "../components/ResultImage";
+import JSZip from "jszip";
+import { Alert } from "react-bootstrap";
 
 export default function Endo() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageUrl, setImageUrl] = useState([]);
   const [predictedClass, setPredictedClass] = useState([]);
+  const [message, setMessage] = useState("");
+
   // For data
   const [data, setData] = useState([]);
   // pie chart setting
@@ -20,8 +24,39 @@ export default function Endo() {
     type: "doughnut", // set chart type to doughnut
   };
   const changeHandler = (event) => {
-    setSelectedFile(event.target.files[0]);
-    // console.log(event.target.files[0]);
+    const file = event.target.files[0]; // Get the uploaded file
+    setSelectedFile(file);
+
+    if (file.type === "application/zip") {
+      const zip = new JSZip(); // Create a new JSZip instance
+
+      // Use JSZip to read the zip file
+      zip
+        .loadAsync(file)
+        .then((zip) => {
+          let fileCount = 0; // Initialize a counter for file count
+
+          // Loop through each file in the zip
+          zip.forEach((relativePath, zipEntry) => {
+            // Check if the zip entry is a file (not a directory)
+            if (!zipEntry.dir) {
+              if (/\.(jpg|jpeg)$/i.test(zipEntry.name)) {
+                fileCount++; // Increment the file count for image files
+              }
+            }
+          });
+
+          console.log(`The zip file contains ${fileCount / 2} files.`); // Log the file count
+          if (fileCount / 2 >= 25) {
+            setMessage(
+              "Since the number of image in your zip file excess 40 images, it may take more than 10 secs to finish the prediction!"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error reading zip file:", error); // Log any errors
+        });
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -91,6 +126,7 @@ export default function Endo() {
     <>
       <div className="page-container">
         <div className="title">classify Hyper-Kvasir</div>
+        {message && <Alert variant="warning">{message}</Alert>}\
         {imageUrl.length > 0 && (
           <>
             <div className="flex-container">
@@ -111,6 +147,7 @@ export default function Endo() {
                   </span>
                 </>
               ))}
+              <p>You can download all the result in .csv formate</p>
               <button class="btn btn-primary" onClick={handleDownload}>
                 Download the result
               </button>

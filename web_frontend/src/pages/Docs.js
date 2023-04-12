@@ -116,7 +116,7 @@ export default function Docs() {
             <pre className="code-box">
               <code>
                 <p>POST /upload HTTP/1.1 </p>
-                <p>Host: example.com </p>
+                <p>Host: localhost:8000 </p>
                 <p>Content-Type: image/jpeg</p>
                 <span>
                   {" { \n    "}[Binary data of the JPG file]{"\n } "}
@@ -127,7 +127,7 @@ export default function Docs() {
             <pre className="code-box">
               <code>
                 <p>POST /upload HTTP/1.1 </p>
-                <p>Host: example.com </p>
+                <p>Host: localhost:8000 </p>
                 <p>Content-Type: image/jpeg</p>
                 <span>
                   {" { "}

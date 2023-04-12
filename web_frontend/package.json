@@ -9,6 +9,7 @@
     "bootstrap": "^5.2.3",
     "chart.js": "^4.2.1",
     "firebase": "^9.17.1",
+    "jszip": "^3.10.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.2",
     "react-chartjs-2": "^5.2.0",
