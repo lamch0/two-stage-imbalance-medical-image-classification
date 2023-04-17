@@ -44,11 +44,18 @@ export default function Eyepacs() {
               }
             }
           });
-
-          console.log(`The zip file contains ${fileCount / 2} files.`); // Log the file count
-          if (fileCount / 2 >= 25) {
+          fileCount = fileCount / 2;
+          // console.log(`The zip file contains ${fileCount / 2} files.`); // Log the file count
+          if (fileCount >= 40) {
+            let imageNum = fileCount / 10 - 4;
+            let roundedDownNumber = 40;
+            let sec = 10;
+            if (imageNum > 0) {
+              roundedDownNumber = Math.floor(fileCount / 10) * 10;
+              sec = roundedDownNumber / 4;
+            }
             setMessage(
-              "Since the number of image in your zip file excess 40 images, it may take more than 10 secs to finish the prediction!"
+              `Since the number of image in your zip file excess ${roundedDownNumber} images, it may take more than ${sec} secs to finish the prediction!`
             );
           }
         })

@@ -3,6 +3,8 @@ import numpy as np
 import torch
 from . import bit_models
 from torchvision.models import mobilenet_v2
+from torchvision.models import resnet50
+from torchvision.models import resnext50_32x4d
 
 # IMAGENET PERFORMANCE FOR TIMM MODELS IS HERE:
 # https://github.com/rwightman/pytorch-image-models/blob/master/results/results-imagenet.csv
@@ -22,6 +24,19 @@ def get_arch(model_name, in_c=3, n_classes=1):
             os.system('wget https://storage.googleapis.com/bit_models/BiT-M-R50x1.npz -P models/')
         model.load_from(np.load('models/BiT-M-R50x1.npz'))
         mean, std = [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]
+
+    elif model_name == 'resnext50':
+        model = resnext50_32x4d(pretrained=True)
+        num_ftrs = model.fc.in_features
+        model.fc = torch.nn.Linear(num_ftrs, n_classes)
+        mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
+
+    elif model_name == 'resnet_50':
+        model = resnet50(pretrained=True)
+        num_ftrs = model.fc.in_features
+        model.fc = torch.nn.Linear(num_ftrs, n_classes)
+        mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
+
     else:
         sys.exit('not a valid model_name, check models.get_model.py')
     setattr(model, 'n_classes', n_classes)
