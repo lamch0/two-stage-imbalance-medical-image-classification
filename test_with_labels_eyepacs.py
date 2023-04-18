@@ -79,6 +79,9 @@ def run_one_epoch_cls(loader, model, optimizer=None):
     if loader.dataset.has_labels:
         return np.stack(preds_all), np.stack(probs_all), np.stack(labels_all)
     return np.stack(preds_all), np.stack(probs_all), None
+def top1_acc(y_true, y_probs):
+    y_preds = np.argmax(y_probs, axis =1)
+    return np.mean(y_true == y_preds)
 
 def test_cls_tta_dihedral(model, test_loader, n=3):
     probs_tta = []
@@ -98,18 +101,21 @@ def test_cls_tta_dihedral(model, test_loader, n=3):
     probs_tta = np.mean(np.array(probs_tta), axis=0)
     preds_tta = np.argmax(probs_tta, axis=1)
 
+    top1_accuracy = top1_acc(test_labels, test_probs)
     del model
     torch.cuda.empty_cache()
-    return probs_tta, preds_tta, test_labels
+    return probs_tta, preds_tta, test_labels, top1_accuracy
 
 def test_cls(model, test_loader):
     # validate one epoch, note no optimizer is passed
     with torch.no_grad():
         test_preds, test_probs, test_labels = run_one_epoch_cls(test_loader, model)
 
+    top1_accuracy = top1_acc(test_labels, test_probs)
+
     del model
     torch.cuda.empty_cache()
-    return test_probs, test_preds, test_labels
+    return test_probs, test_preds, test_labels, top1_accuracy
 
 
 if __name__ == '__main__':
@@ -160,9 +166,9 @@ if __name__ == '__main__':
     test_loader = get_test_cls_loader(csv_path_test=csv_test, data_path=data_path, batch_size=bs, mean=mean, std=std, tg_size=tg_size, test=False)
 
     if dihedral_tta==0:
-        probs, preds, labels = test_cls(model, test_loader)
+        probs, preds, labels, top1 = test_cls(model, test_loader)
     elif dihedral_tta>0:
-        probs, preds, labels = test_cls_tta_dihedral(model, test_loader, n=dihedral_tta)
+        probs, preds, labelsm, top1 = test_cls_tta_dihedral(model, test_loader, n=dihedral_tta)
     else: sys.exit('dihedral_tta must be >=0')
 
     print_conf = True
@@ -171,6 +177,7 @@ if __name__ == '__main__':
                                                           class_names=class_names, text_file=text_file)
 
     print('Test - K: {:.2f} - mAUC: {:.2f}  - MCC: {:.2f} - F1: {:.2f} - BalAcc: {:.2f}'.format(100*test_k, 100*test_auc, 100*test_mcc, 100*test_f1, 100*test_bacc))
+    print('Top1-accuracy{:.2f}'.format(100*top1))
 
 
 
