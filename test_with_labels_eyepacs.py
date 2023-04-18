@@ -117,6 +117,36 @@ def test_cls(model, test_loader):
     torch.cuda.empty_cache()
     return test_probs, test_preds, test_labels, top1_accuracy
 
+def evaluate(test_loader, model, n=3):
+    # code for evaluation
+    ...
+    probs_tta, preds_tta, labels = test_cls_tta_dihedral(model, test_loader, n)
+    ...
+    acc = get_aca(labels, preds_tta)
+    many_shot_acc = 0
+    medium_shot_acc = 0
+    few_shot_acc = 0
+    many_shot_count = 0
+    medium_shot_count = 0
+    few_shot_count = 0
+    for cls in np.unique(labels):
+        cls_mask = labels == cls
+        cls_preds = preds_tta[cls_mask]
+        cls_labels = labels[cls_mask]
+        cls_count = len(cls_labels)
+        if cls_count >= 20000:
+            many_shot_count += 1
+            many_shot_acc += np.sum(cls_preds == cls_labels)
+        elif cls_count >= 1000:
+            medium_shot_count += 1
+            medium_shot_acc += np.sum(cls_preds == cls_labels)
+        else:
+            few_shot_count += 1
+            few_shot_acc += np.sum(cls_preds == cls_labels)
+    many_shot_acc = many_shot_acc / (many_shot_count * 1.0) if many_shot_count > 0 else 0
+    medium_shot_acc = medium_shot_acc / (medium_shot_count * 1.0) if medium_shot_count > 0 else 0
+    few_shot_acc = few_shot_acc / (few_shot_count * 1.0) if few_shot_count > 0 else 0
+    return many_shot_acc, medium_shot_acc, few_shot_acc
 
 if __name__ == '__main__':
     '''
@@ -169,6 +199,7 @@ if __name__ == '__main__':
         probs, preds, labels, top1 = test_cls(model, test_loader)
     elif dihedral_tta>0:
         probs, preds, labels, top1 = test_cls_tta_dihedral(model, test_loader, n=dihedral_tta)
+        many, med, few = evaluate(test_loader, model, n=dihedral_tta)
     else: sys.exit('dihedral_tta must be >=0')
 
     print_conf = True
@@ -178,6 +209,10 @@ if __name__ == '__main__':
 
     print('Test - K: {:.2f} - mAUC: {:.2f}  - MCC: {:.2f} - F1: {:.2f} - BalAcc: {:.2f}'.format(100*test_k, 100*test_auc, 100*test_mcc, 100*test_f1, 100*test_bacc))
     print('Top1-accuracy{:.2f}'.format(100*top1))
+    print("many shot acc:{:.2f}".format(100*many))
+    print("many shot acc:{:.2f}".format(100*med))
+    print("many shot acc:{:.2f}".format(100*few))
+
 
 
 
