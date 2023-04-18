@@ -120,7 +120,7 @@ def test_cls(model, test_loader):
 def evaluate(test_loader, model, n=3):
     # code for evaluation
     ...
-    probs_tta, preds_tta, labels = test_cls_tta_dihedral(model, test_loader, n)
+    probs_tta, preds_tta, labels, top1 = test_cls_tta_dihedral(model, test_loader, n)
     ...
     acc = get_aca(labels, preds_tta)
     many_shot_acc = 0
