@@ -168,7 +168,7 @@ if __name__ == '__main__':
     if dihedral_tta==0:
         probs, preds, labels, top1 = test_cls(model, test_loader)
     elif dihedral_tta>0:
-        probs, preds, labelsm, top1 = test_cls_tta_dihedral(model, test_loader, n=dihedral_tta)
+        probs, preds, labels, top1 = test_cls_tta_dihedral(model, test_loader, n=dihedral_tta)
     else: sys.exit('dihedral_tta must be >=0')
 
     print_conf = True
