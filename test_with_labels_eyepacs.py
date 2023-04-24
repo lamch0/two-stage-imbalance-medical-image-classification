@@ -12,6 +12,7 @@ import numpy as np
 import torch
 import torchvision
 import torch.nn.functional as F
+from sklearn.metrics import accuracy_score
 
 import os.path as osp
 import os
@@ -122,13 +123,21 @@ def evaluate(test_loader, model, n=3):
     ...
     probs_tta, preds_tta, labels, top1 = test_cls_tta_dihedral(model, test_loader, n)
     ...
-    acc = get_aca(labels, preds_tta)
-    many_shot_acc = 0
-    medium_shot_acc = 0
-    few_shot_acc = 0
-    many_shot_count = 0
-    medium_shot_count = 0
-    few_shot_count = 0
+    preds = preds_tta
+    many_shot_thr = 2000
+    med_shot_thr = 1000
+    num_samples_per_class = np.sum(labels == np.arange(len(np.unique(labels)))[:, np.newaxis], axis=1)
+    many_shot_classes = np.where(num_samples_per_class >= many_shot_thr)[0]
+    med_shot_classes = np.where((num_samples_per_class >= med_shot_thr) & (num_samples_per_class < many_shot_thr))[0]
+    few_shot_classes = np.where(num_samples_per_class < med_shot_thr)[0]
+    many_shot_mask = np.isin(labels, many_shot_classes)
+    med_shot_mask = np.isin(labels, med_shot_classes)
+    few_shot_mask = np.isin(labels, few_shot_classes)
+    many_shot_acc = accuracy_score(labels[many_shot_mask], preds[many_shot_mask])
+    med_shot_acc = accuracy_score(labels[med_shot_mask], preds[med_shot_mask])
+    few_shot_acc = accuracy_score(labels[few_shot_mask], preds[few_shot_mask])
+    return many_shot_acc,med_shot_acc,few_shot_acc
+    
     for cls in np.unique(labels):
         cls_mask = labels == cls
         cls_preds = preds_tta[cls_mask]
