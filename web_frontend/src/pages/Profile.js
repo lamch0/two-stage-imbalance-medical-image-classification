@@ -24,6 +24,7 @@ export default function Profile() {
     try {
       await logout();
       navigate("/login");
+      window.location.reload(); // Reload the website
     } catch {
       setError("Failed to log out");
     }

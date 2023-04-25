@@ -135,7 +135,7 @@ export default function Endo() {
     <>
       <div className="page-container">
         <div className="title">classify Hyper-Kvasir</div>
-        {message && <Alert variant="warning">{message}</Alert>}\
+        {message && <Alert variant="warning">{message}</Alert>}
         {imageUrl.length > 0 && (
           <>
             <div className="flex-container">
